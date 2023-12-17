@@ -1,26 +1,46 @@
+;library section
 INCLUDE Irvine32.inc
+
+;define data section
 .data
+;the chessboard which store each mate
 board BYTE 90 DUP('+') 
-sourceX DWORD 0
-sourceY DWORD 0
+
+;the mate on this location will be selected
+sourceX DWORD 0 
+sourceY DWORD 0 
+
+;the mate will be moved to this location
 targetX DWORD 0
 targetY DWORD 0
+
+;x-axis and y-axis label
 x_axis BYTE "  0 1 2 3 4 5 6 7 8 x",0
 y_axis BYTE "y",0
+
+;message
 error_message BYTE "Invalid Input",0
-playing_turn DWORD 1 ;1 stand for its green's turn ,2 stand for its red's turn
 green_playing_turn_message BYTE "It is green's turn:",0
 red_playing_turn_message BYTE "It is red's turn:",0
 green_win_announcement BYTE "green is winner",0
 red_win_announcement BYTE "Red is winner",0
-game_status DWORD 3 ;3 stand for game not over ,1 stand for green win ,2 stand for red win
-game_restart DWORD 0
-game_terminate DWORD 0
-game_re_enter DWORD 0
 game_hint1 BYTE "First input (x,y) of the piece you want to move",0
 game_hint2 BYTE "Then input (x,y) of the coordinate you want to move to",0
 game_hint3 BYTE "Press 10 to restart or Press 11 to leave the game or Press 12 to re-enter you input",0
+
+;define some values
+playing_turn DWORD 1 ;1 stand for its green's turn ,2 stand for its red's turn
+game_status DWORD 3 ;3 stand for game not over ,1 stand for green win ,2 stand for red win
+
+;0 stand for false ,1 stand for true
+game_restart DWORD 0 ;if the game need to be restarted
+game_terminate DWORD 0 ;if the game is terminated
+game_re_enter DWORD 0 ;if the input need to be re-entered
+
+;code section
 .code
+;-----------------------------------------------------------
+;initialize the game
 init PROC uses eax ebx ecx edx
     mov edi,OFFSET board
     mov ecx,90
@@ -89,7 +109,8 @@ ini_board:
     mov game_re_enter,eax
     ret
 init ENDP
- 
+;-----------------------------------------------------------
+;print the current chessboard
 print_chessboard PROC uses eax ebx ecx edx
     call Clrscr
     mov edi,OFFSET board
@@ -246,11 +267,11 @@ print_chessboard PROC uses eax ebx ecx edx
 
     call WriteString
     call Crlf
-
 btm:
     ret
 print_chessboard ENDP
-
+;-----------------------------------------------------------
+;print error message
 print_error_message PROC uses eax ebx ecx edx
     mov edx,OFFSET error_message
     call WriteString
@@ -258,21 +279,24 @@ print_error_message PROC uses eax ebx ecx edx
     call WaitMsg
     ret
 print_error_message ENDP
-
+;-----------------------------------------------------------
+;print green win message
 print_green_win PROC uses eax ebx ecx edx
     mov edx,OFFSET green_win_announcement
     call WriteString
     call crlf
     ret
 print_green_win ENDP
-
+;-----------------------------------------------------------
+;print red win message
 print_red_win PROC uses eax ebx ecx edx
     mov edx,OFFSET red_win_announcement
     call WriteString
     call crlf
     ret
 print_red_win ENDP
- 
+;-----------------------------------------------------------
+;move the chess at (sourceX,sourceY) to (targetX,targetY)
 move PROC uses eax ebx ecx edx
     LOCAL temp:BYTE
     mov eax,0
@@ -309,26 +333,30 @@ move PROC uses eax ebx ecx edx
     bottom:
     ret
 move ENDP
-
+;-----------------------------------------------------------
+;restart the game
 restart PROC uses eax ebx ecx edx
     mov eax,1
     mov game_restart,eax
     ret
 restart ENDP
-
+;-----------------------------------------------------------
+;terminate the game
 terminate PROC uses eax ebx ecx edx
     mov eax,1
     mov game_terminate,eax
     ret
 terminate ENDP
-
+;-----------------------------------------------------------
+;re-enter input
 re_enter PROC uses eax ebx ecx edx
     call Clrscr
     call print_chessboard
     call input
     ret
 re_enter ENDP
-
+;-----------------------------------------------------------
+;input sourceX,sourceY,inputX,inputY
 input PROC uses eax ebx ecx edx
     input_sourceX:
     call ReadDec
@@ -349,7 +377,7 @@ input PROC uses eax ebx ecx edx
         jmp bottom
     .ENDIF
     mov sourceX,eax
-    ;-----------------------
+
     input_sourceY:
     call ReadDec
     .IF eax == 10
@@ -369,7 +397,7 @@ input PROC uses eax ebx ecx edx
         jmp bottom
     .ENDIF
     mov sourceY,eax
-    ;-----------------------
+
     input_targetX:
     call ReadDec
     .IF eax == 10
@@ -389,7 +417,7 @@ input PROC uses eax ebx ecx edx
         jmp bottom
     .ENDIF
     mov targetX,eax
-    ;-----------------------
+
     input_targetY:
     call ReadDec
     .IF eax == 10
@@ -409,11 +437,12 @@ input PROC uses eax ebx ecx edx
         jmp bottom
     .ENDIF
     mov targetY,eax
-    ;-------------------------
+
     bottom:
     ret
 input ENDP
-
+;-----------------------------------------------------------
+;the procedure for operating car
 play_car PROC uses eax ebx ecx edx
     
     LOCAL if_no_ally_on_target:DWORD, current:BYTE, target:BYTE
@@ -586,6 +615,7 @@ m:
     ret
 play_car ENDP
 ;-----------------------------------------------------------
+;the procedure for operating horse
 play_horse PROC uses eax ebx ecx edx
 
     LOCAL if_no_ally_on_target:DWORD, current:BYTE, target:BYTE, hori:DWORD, verti:DWORD
@@ -878,6 +908,7 @@ assign:
     ret
 play_horse ENDP
 ;----------------------------------------------------------
+;the procedure for operating elephant
 play_elephant PROC uses eax ebx ecx edx       
     LOCAL if_X_same:DWORD,if_Y_same:DWORD,if_path_middle_empty:DWORD,if_no_ally_on_target:DWORD,if_not_cross_river:DWORD,current:BYTE,target:BYTE
     mov eax,0
@@ -998,7 +1029,7 @@ play_elephant PROC uses eax ebx ecx edx
 
         .ENDIF
     .ENDIF
-    ;--------------
+
     mov eax,0
     mov if_X_same,eax
     mov if_Y_same,eax
@@ -1115,7 +1146,7 @@ play_elephant PROC uses eax ebx ecx edx
 
         .ENDIF
     .ENDIF
-    ;--------------
+
     mov eax,0
     mov if_X_same,eax
     mov if_Y_same,eax
@@ -1232,7 +1263,7 @@ play_elephant PROC uses eax ebx ecx edx
 
         .ENDIF
     .ENDIF
-    ;--------------
+
     mov eax,0
     mov if_X_same,eax
     mov if_Y_same,eax
@@ -1349,12 +1380,12 @@ play_elephant PROC uses eax ebx ecx edx
 
         .ENDIF
     .ENDIF
-    ;--------------
 
     call print_error_message
     ret
 play_elephant ENDP
 ;---------------------------------------------------------
+;the procedure for operating warrior
 play_warrior PROC uses eax ebx ecx edx
     local temp:BYTE
     mov eax,0
@@ -1406,7 +1437,7 @@ play_warrior PROC uses eax ebx ecx edx
                 ret
             .endif
         .endif
-        ;-------------------------------------
+
         mov eax,sourceY
         mov ebx,targetY
         .if eax == ebx
@@ -1476,7 +1507,7 @@ play_warrior PROC uses eax ebx ecx edx
                 ret
             .endif
         .endif
-        ;------------------------------------
+ 
         mov eax,sourceY
         mov ebx,targetY
         .if eax == ebx
@@ -1513,13 +1544,14 @@ play_warrior PROC uses eax ebx ecx edx
     ret
 play_warrior ENDP
 ;---------------------------------------------------------
+;the procedure for operating general
 play_general PROC uses eax ebx ecx edx
     LOCAL if_no_ally_on_target:DWORD,current:BYTE,target:BYTE
     mov eax,0
     mov if_no_ally_on_target,eax
 
     mov eax,sourceY
-    .IF eax > 4 ;¶Â¤èªº±N
+    .IF eax > 4 ;é»‘æ–¹çš„å°‡
         mov eax,targetX
         .IF eax > 5
             call print_error_message
@@ -1538,7 +1570,7 @@ play_general PROC uses eax ebx ecx edx
     .ENDIF
 
     mov eax, sourceY
-    .IF eax < 5 ;¬õ¤èªº«Ó
+    .IF eax < 5 ;ç´…æ–¹çš„å¸¥
         mov eax,targetX
         .IF eax > 5
             call print_error_message
@@ -1663,21 +1695,23 @@ play_general PROC uses eax ebx ecx edx
    
 play_general ENDP
 ;------------------------------------------------------------
+; This procedure checks the validity of a move for a cannon ('P' on the chess board) in Chinese chess.
 play_pow PROC uses eax ebx ecx edx
     LOCAL if_no_ally_on_target:DWORD, current:BYTE, target:BYTE, piece_num_on_path:DWORD, temp:DWORD
 
+    ; Initialize variables
     mov eax, 0
     mov if_no_ally_on_target, eax
     mov current, al
     mov target, al
-    mov piece_num_on_path, eax         ;Initialize len to 0
-    ;mov temp, eax        ;Initialize temp to 0
+    mov piece_num_on_path, eax          
     mov edi, OFFSET board
     
-
+    ; Extract source and target X coordinates
     mov eax, sourceX
     mov ebx, targetX
 
+    ; Check if both X and Y coordinates are different.
     .IF eax != ebx
         mov eax, sourceY
         mov ebx, targetY
@@ -1687,12 +1721,15 @@ play_pow PROC uses eax ebx ecx edx
         .ENDIF
     .ENDIF
 
+    ; Reset coordinates
     mov eax, sourceX
     mov ebx, targetX
     
+    ; Check if X coordinates are equal
     .IF eax == ebx
         mov eax, sourceY
         mov ebx, targetY
+        ; Check if the X coordinates are equal, and if the Y coordinate of the source is greater than that of the target.
         .IF eax >= ebx
             mov ecx, eax
             sub ecx, ebx
@@ -1702,6 +1739,7 @@ play_pow PROC uses eax ebx ecx edx
             add eax, ebx
             jmp check_verti_up
         .ENDIF
+        ; Check if the X coordinates are equal, and if the Y coordinate of the source is less than that of the target.
         .IF eax < ebx
             mov ecx, ebx
             sub ecx, eax
@@ -1712,6 +1750,7 @@ play_pow PROC uses eax ebx ecx edx
             jmp check_verti_down
         .ENDIF
     .ENDIF
+    ; Check if X coordinates are not equal
     .IF eax != ebx
         .IF eax >= ebx
             mov ecx, eax
@@ -1739,29 +1778,24 @@ check_hori_left:
     sub eax, 1
     mov bl, [edi+eax]
     
+    ; Check if the square on the path is occupied
     .IF bl != '+'
         inc piece_num_on_path
-        ;without comment => unable to cross other pieces
-        ;.IF ecx != 1
-        ;    call print_error_message
-        ;    ret
-        ;.ENDIF
     .ENDIF
+    ; Check if the end of the path is reached
     .IF ecx == 1
         jmp assign
-     .ENDIF
+    .ENDIF
     loop check_hori_left
 
 check_hori_right:
     add eax, 1
     mov bl, [edi+eax]
+    ; Check if the square on the path is occupied
     .IF bl != '+'
         inc piece_num_on_path
-        ;.IF ecx != 1
-        ;    call print_error_message
-        ;    ret
-        ;.ENDIF
     .ENDIF
+    ; Check if the end of the path is reached
     .IF ecx == 1
         jmp assign
      .ENDIF
@@ -1770,37 +1804,34 @@ check_hori_right:
 check_verti_up:
     sub eax, 9
     mov bl, [edi+eax]
+    ; Check if the square on the path is occupied
     .IF bl != '+'
         mov ebx, targetY
         inc piece_num_on_path
-        ;.IF ecx != 1
-        ;    call print_error_message
-        ;    ret
-        ;.ENDIF
     .ENDIF
+    ; Check if the end of the path is reached
     .IF ecx == 1
         jmp assign
-     .ENDIF
+    .ENDIF
     loop check_verti_up   
 
 check_verti_down:
     mov ebx, 9
     add eax, ebx
     mov bl, [edi+eax]
+    ; Check if the square on the path is occupied
     .IF bl != '+'
         inc piece_num_on_path
         mov ebx, targetY
-        ;.IF ecx != 1
-        ;    call print_error_message
-        ;    ret
-        ;.ENDIF
     .ENDIF
+    ; Check if the end of the path is reached
     .IF ecx == 1
         jmp assign
-     .ENDIF
+    .ENDIF
     loop check_verti_down
 
 assign:
+    ; Get the characters at the source and target positions
     mov eax, targetY
     mov bl, 9
     mul bl
@@ -1819,22 +1850,21 @@ assign:
 
     mov al,current
     mov bl,target 
+    ; Check if the target position is empty
     .IF bl == '+'
         mov eax,1
         mov if_no_ally_on_target,eax
     .ENDIF
+    ; Check for the presence of an ally on the target
     .IF bl != '+'
+        ; Check if the current piece is an enemy and the path has only one piece
         .IF al > 10h
             .IF bl < 10h
-                mov temp, ebx   ;store the value of ebx to temp
-                mov ebx, piece_num_on_path    ;To check the value of piece_num_on_path, it has to be stored in a register.
+                mov temp, ebx   
+                mov ebx, piece_num_on_path    
                 .IF ebx == 2    
                     mov eax,1
                     mov if_no_ally_on_target,eax
-                .ENDIF
-                .IF ebx != 2
-                    call print_error_message
-                    ret
                 .ENDIF
                 mov ebx, temp
             .ENDIF
@@ -1847,28 +1877,24 @@ assign:
                     mov eax,1
                     mov if_no_ally_on_target,eax
                 .ENDIF
-                ;.IF ebx != 2
-                    ;call print_error_message
-                    ;ret
-                ;.ENDIF
                 mov ebx,temp
             .ENDIF
         .ENDIF
     .ENDIF
     mov eax, if_no_ally_on_target
    
+    ; Check if the move is valid
     .IF eax == 1
-        ; The move is valid, call move
         call move
         ret
     .ENDIF
 
     ; If the move is not valid, print an error message
     call print_error_message
-    
     ret
 play_pow ENDP
 ;-------------------------------------------------------------
+;the procedure for operating soilder
 play_soilder PROC uses eax ebx ecx edx
     LOCAL if_no_ally_on_target:DWORD,current:BYTE,target:BYTE
     mov eax,0
@@ -2131,6 +2157,7 @@ play_soilder PROC uses eax ebx ecx edx
     ret 
 play_soilder ENDP
 ;--------------------------------------------------------
+;the play procedure
 play PROC uses eax ebx ecx edx
     ;use coordinate to calculate the type of piece 
     mov eax,0
@@ -2197,7 +2224,8 @@ play PROC uses eax ebx ecx edx
     .ENDIF
     ret
 play ENDP
-
+;-----------------------------------------------------------
+;change the gamestatus 
 change_game_status PROC uses eax ebx ecx edx
     LOCAL redalive:DWORD, greenalive:DWORD
     mov eax,0
@@ -2222,7 +2250,8 @@ L1:
     mov game_status, eax
     ret
 change_game_status ENDP
-
+;-----------------------------------------------------------
+;main procedure
 main PROC
     initialize_game:
     call init
