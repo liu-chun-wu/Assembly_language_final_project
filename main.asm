@@ -616,16 +616,16 @@ m:
 play_car ENDP
 ;-----------------------------------------------------------
 ;the procedure for operating horse
-play_horse PROC uses eax ebx ecx edx
-
+play_horse PROC
+ 
     LOCAL if_no_ally_on_target:DWORD, current:BYTE, target:BYTE, hori:DWORD, verti:DWORD
-
+ 
     mov eax, 0
     mov if_no_ally_on_target, eax
     mov current, al
     mov target, al
     mov edi, OFFSET board
-
+ 
     mov eax, sourceX
     mov ebx, targetX
     .IF eax == ebx
@@ -736,7 +736,7 @@ play_horse PROC uses eax ebx ecx edx
             .ENDIF
         .ENDIF
     .ENDIF
-
+ 
 left_up:
     mov eax, hori
     .IF eax == 1
@@ -767,7 +767,7 @@ left_up:
         .ENDIF
         jmp assign
     .ENDIF
-    
+ 
 left_down:
     mov eax, hori
     .IF eax == 1
@@ -798,7 +798,7 @@ left_down:
         .ENDIF
         jmp assign
     .ENDIF
-
+ 
 right_up:
     mov eax, hori
     .IF eax == 1
@@ -829,7 +829,7 @@ right_up:
         .ENDIF
         jmp assign
     .ENDIF
-
+ 
 right_down:
     mov eax, hori
     .IF eax == 1
@@ -860,7 +860,7 @@ right_down:
         .ENDIF
         jmp assign
     .ENDIF
-
+ 
 assign:
     mov eax, targetY
     mov bl, 9
@@ -869,15 +869,15 @@ assign:
     add eax, ebx
     mov bl, [edi+eax]
     mov target, bl
-
-    mov eax, sourceX
+ 
+    mov eax, sourceY
     mov bl, 9
     mul bl
-    mov ebx, sourceY
+    mov ebx, sourceX
     add eax, ebx
     mov bl, [edi+eax]
     mov current, bl
-
+ 
     mov al,current
     mov bl,target 
     .IF bl == '+'
@@ -903,7 +903,7 @@ assign:
         call move
         ret
     .ENDIF
-
+ 
     call print_error_message
     ret
 play_horse ENDP
@@ -1546,10 +1546,85 @@ play_warrior ENDP
 ;---------------------------------------------------------
 ;the procedure for operating general
 play_general PROC uses eax ebx ecx edx
-    LOCAL if_no_ally_on_target:DWORD,current:BYTE,target:BYTE
+    LOCAL if_no_ally_on_target:DWORD,current:BYTE,target:BYTE,cur_pos:DWORD,tar_pos:DWORD
     mov eax,0
     mov if_no_ally_on_target,eax
 
+    mov edi,OFFSET board
+    mov eax,targetY
+    mov bl,9
+    mul bl
+    mov ebx,targetX
+    add eax,ebx
+    mov tar_pos, eax
+    mov bl,[edi+eax]
+    mov target,bl
+            
+    mov eax,sourceY
+    mov bl,9
+    mul bl
+    mov ebx,sourceX
+    add eax,ebx
+    mov cur_pos, eax
+    mov bl,[edi+eax]
+    mov current,bl
+
+    mov eax,sourceX
+    mov ebx,targetX
+    .IF eax == ebx
+        mov al,current
+        mov bl,target
+        .IF al == 5h
+            .IF bl == 15h
+                mov eax,cur_pos
+                mov ebx,tar_pos
+                add eax,9
+
+                check_king_to_king_red:                
+                push ebx
+                mov bl,[edi+eax]
+                .IF bl != '+'
+                    jmp regular
+                .ENDIF
+
+                add eax,9
+                pop ebx
+                cmp eax,ebx
+                JNE check_king_to_king_red
+
+                call move
+                ret
+            .ENDIF
+        .ENDIF
+
+        mov al,current
+        mov bl,target
+        .IF al == 15h
+            .IF bl == 5h
+                mov eax,cur_pos
+                mov ebx,tar_pos
+                sub eax,9
+
+                check_king_to_king_green:                
+                push ebx
+                mov bl,[edi+eax]
+                .IF bl != '+'
+                    jmp regular
+                .ENDIF
+
+                sub eax,9
+                pop ebx
+                cmp eax,ebx
+                JNE check_king_to_king_green
+
+                call move
+                ret
+            .ENDIF
+        .ENDIF
+    .ENDIF
+
+
+    regular:
     mov eax,sourceY
     .IF eax > 4 ;黑方的將
         mov eax,targetX
@@ -1706,6 +1781,9 @@ play_pow PROC uses eax ebx ecx edx
     mov target, al
     mov piece_num_on_path, eax          
     mov edi, OFFSET board
+
+    
+    
     
     ; Extract source and target X coordinates
     mov eax, sourceX
@@ -1798,7 +1876,7 @@ check_hori_right:
     ; Check if the end of the path is reached
     .IF ecx == 1
         jmp assign
-     .ENDIF
+    .ENDIF
     loop check_hori_right
 
 check_verti_up:
@@ -1852,6 +1930,13 @@ assign:
     mov bl,target 
     ; Check if the target position is empty
     .IF bl == '+'
+        mov temp, ebx   
+        mov ebx, piece_num_on_path  
+        .IF ebx != 0
+            call print_error_message
+            ret
+        .ENDIF
+        mov ebx, temp
         mov eax,1
         mov if_no_ally_on_target,eax
     .ENDIF
